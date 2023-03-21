@@ -13,6 +13,8 @@
 # 4. 그냥 실내를 또 만나면 결과 + 1 하고 리턴시켜주면 됨 
 # """
 
+
+
 """
 60점 
 """
@@ -69,17 +71,21 @@
 
 모든 노드 순회에 O(N),
 dfs가 있으나 방문한 곳은 또 가지 않기 때문에 최종 O(N)
-
 """
 import sys
-sys.setrecursionlimit(10 ** 7)
+sys.setrecursionlimit(10 ** 9)
 
 n = int(sys.stdin.readline())
 
 # 실내 실외
 path = sys.stdin.readline().strip()
 
-graph = {i:[] for i in range(1, n+1)}
+# 인접 그래프
+graph = [0]
+for _ in range(n):
+    graph.append([])
+
+res = 0 # 최종 결과 
 
 # 간선 입력받음
 for _ in range(n-1):
@@ -87,35 +93,31 @@ for _ in range(n-1):
     graph[a].append(b)
     graph[b].append(a)
 
-visited = [0] * (n+1)
+    # 실내 - 실내면 바로 += 2 해줌
+    if path[a-1] == "1" and path[b-1] == "1":
+        res += 2
 
-def dfs(start, iToi, oToo):
-    global res
-
+def dfs(start, cnt):
     visited[start] = True
 
     for i in graph[start]:
-        if path[start-1] == "0": # 실외 
-            if path[i - 1] == "0": # 에서 실외
-                dfs(i, iToi, oToo)
-            else:
-                oToo += 1
-        
-        else: # 실내
-            if path[i-1] == "1": # 에서 실내
-                iToi += 1
-            else: 
-                pass
+        if path[i - 1] == "0" and not visited[i]: # 실외로 가면
+            cnt = dfs(i, cnt)
+        elif path[i-1] == "1": # 실내로 가면
+            cnt += 1
+    return cnt
 
-    # return iToi + oToo * (oToo - 1)
-
-res = 0 
+visited = [False] * (n+1)
 
 for i in range(1, n+1):
-    if not visited[i]:
-        cnt = dfs(i, 0, 0)
-        res += cnt
+    if not visited[i] and path[i-1] == "0": # 실외만 dfs
+        # 어차피 "실내"로는 가지도 않으니까 visited배열은 실외만을 체크하기 위한 것
+        # 실외에 대한 방문을 기록해주지 않으면 갔던 곳을 또가게 되고 그만큼 dfs재귀호출을 더하게됨
+        # 그래서 스택프레임(지역변수,매개변수, 복귀주소)이 쌓여서? 메모리 초과가 난게 아닐까...
+        # 호출이 깊어질 수 있게 recursion limit 은 열어줬지만, 스택 
+        cnt = dfs(i, 0)
+        res += cnt * (cnt - 1)
 
 print(res)        
-
+   
 
